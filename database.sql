@@ -1,19 +1,34 @@
 -- Active: 1748246424675@@localhost@3306@dicemeet
 
-DROP TABLE IF EXISTS trait;
-
-DROP TABLE IF EXISTS country;
-
-DROP TABLE IF EXISTS city;
-
-DROP TABLE IF EXISTS user;
-
 DROP TABLE IF EXISTS user_traits;
+
+DROP TABLE IF EXISTS favorite_game;
+
+DROP TABLE IF EXISTS game_place;
+
+DROP TABLE IF EXISTS meetup_user;
+
+DROP TABLE IF EXISTS trait;
 
 DROP TABLE IF EXISTS availability;
 
-DROP TABLE IF EXISTS place;
 DROP TABLE IF EXISTS favorite_place;
+
+DROP TABLE IF EXISTS rating;
+
+DROP TABLE IF EXISTS message;
+
+DROP TABLE IF EXISTS user;
+
+DROP TABLE IF EXISTS meetup;
+
+DROP TABLE IF EXISTS place;
+
+DROP TABLE IF EXISTS city;
+
+DROP TABLE IF EXISTS country;
+
+DROP TABLE IF EXISTS game;
 
 CREATE TABLE trait (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -189,12 +204,219 @@ CREATE TABLE game (
     name VARCHAR(80) UNIQUE NOT NULL,
     min_player SMALLINT NOT NULL,
     max_player SMALLINT NOT NULL,
-    description TEXT ,
+    description TEXT,
     img_url VARCHAR(150),
     difficulty CHAR(2)
-) ENGINE = INNODB DEFAULT CHARSET = utf8;  
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
 
-INSERT INTO game (name,min_player,max_player,description,img_url,difficulty) VALUES
-("Terraforming Mars",1,5,"Le meilleur jeu du monde","/assets/img-terraformingmars","5D"),
-("Catan",2,8,"Un bon jeu","/assets/img-catan","2B"),
-("Agricola",2,4,NULL,"/assets/img-agricola","3D");
+INSERT INTO
+    game (
+        name,
+        min_player,
+        max_player,
+        description,
+        img_url,
+        difficulty
+    )
+VALUES (
+        "Terraforming Mars",
+        1,
+        5,
+        "Le meilleur jeu du monde",
+        "/assets/img-terraformingmars",
+        "5D"
+    ),
+    (
+        "Catan",
+        2,
+        8,
+        "Un bon jeu",
+        "/assets/img-catan",
+        "2B"
+    ),
+    (
+        "Agricola",
+        2,
+        4,
+        NULL,
+        "/assets/img-agricola",
+        "3D"
+    );
+
+CREATE TABLE favorite_game (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    game_id INT NOT NULL,
+    Foreign Key (user_id) REFERENCES user (id),
+    Foreign Key (game_id) REFERENCES game (id)
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
+
+INSERT INTO
+    favorite_game (user_id, game_id)
+VALUES (1, 3),
+    (2, 3),
+    (1, 1);
+
+CREATE TABLE game_place (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    place_id INT NOT NULL,
+    game_id INT NOT NULL,
+    Foreign Key (place_id) REFERENCES place (id),
+    Foreign Key (game_id) REFERENCES game (id)
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
+
+INSERT INTO
+    game_place (place_id, game_id)
+VALUES (1, 2),
+    (2, 3),
+    (3, 1);
+
+CREATE TABLE meetup (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    time DATETIME NOT NULL,
+    capacity SMALLINT NOT NULL,
+    place_id INT NOT NULL,
+    game_id INT NOT NULL,
+    Foreign Key (place_id) REFERENCES place (id),
+    Foreign Key (game_id) REFERENCES game (id)
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
+
+INSERT INTO
+    meetup (
+        time,
+        capacity,
+        place_id,
+        game_id
+    )
+VALUES (
+        "2025-06-18 16:30:00",
+        4,
+        2,
+        3
+    ),
+    (
+        "2025-07-28 16:30:00",
+        2,
+        1,
+        2
+    ),
+    (
+        "2023-06-18 20:30:00",
+        8,
+        1,
+        3
+    );
+
+CREATE TABLE meetup_user (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    meetup_id INT NOT NULL,
+    Foreign Key (user_id) REFERENCES user (id),
+    Foreign Key (meetup_id) REFERENCES meetup (id)
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
+
+INSERT INTO
+    meetup_user (user_id, meetup_id)
+VALUES (1, 2),
+    (2, 3),
+    (3, 1);
+
+CREATE TABLE rating (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    value SMALLINT NOT NULL,
+    time DATETIME NOT NULL,
+    comment TEXT,
+    user_rated INT NOT NULL,
+    rated_by_user INT NOT NULL,
+    meetup_id INT NOT NULL,
+    Foreign Key (user_rated) REFERENCES user (id),
+    Foreign Key (rated_by_user) REFERENCES user (id),
+    Foreign Key (meetup_id) REFERENCES meetup (id)
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
+
+INSERT INTO
+    rating (
+        value,
+        time,
+        comment,
+        user_rated,
+        rated_by_user,
+        meetup_id
+    )
+VALUES (
+        4,
+        "2025-06-18 16:30:00",
+        "Super joueur très sympa",
+        1,
+        2,
+        2
+    ),
+    (
+        1,
+        "2025-06-02 11:30:00",
+        "Gros blaireau",
+        1,
+        1,
+        3
+    ),
+    (
+        5,
+        "2025-06-02 11:30:00",
+        "Top",
+        1,
+        2,
+        1
+    );
+
+CREATE TABLE message (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user1_id INT NOT NULL,
+    user2_id INT,
+    content TEXT,
+    meetup_id INT,
+    time DATETIME NOT NULL,
+    is_read BOOLEAN NOT NULL,
+    meetup_invitation_id INT UNIQUE,
+    Foreign Key (user1_id) REFERENCES user (id),
+    Foreign Key (user2_id) REFERENCES user (id),
+    Foreign Key (meetup_id) REFERENCES meetup (id),
+    Foreign Key (meetup_invitation_id) REFERENCES meetup (id)
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
+
+INSERT INTO
+    message (
+        user1_id,
+        user2_id,
+        content,
+        meetup_id,
+        time,
+        is_read,
+        meetup_invitation_id
+    )
+VALUES (
+        1,
+        2,
+        "coucou toi",
+        NULL,
+        "2025-06-02 11:30:00",
+        FALSE,
+        NULL
+    ),
+    (
+        1,
+        NULL,
+        "Qui pour venir jouer",
+        2,
+        "2025-11-22 18:30:00",
+        FALSE,
+        2
+    ),
+    (
+        1,
+        3,
+        "coucou toi t gentil ct bien la game",
+        2,
+        "2025-06-02 18:30:00",
+        TRUE,
+        NULL
+    );
